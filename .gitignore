@@ -2,4 +2,3 @@
 /dqn_ep/*.pyc
 /dqn_ep/test.py
 .idea/
-.gitignore
