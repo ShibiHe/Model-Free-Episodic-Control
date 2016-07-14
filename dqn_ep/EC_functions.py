@@ -75,7 +75,7 @@ class QECTable(object):
 
     @staticmethod
     def _calc_distance(a, b):
-        return np.sum(a-b)
+        return np.sum(np.absolute(a-b))
 
     """update Q_EC(s,a)  O(N)  check_existence: O(N) -> insert: O(1) || LRU_insert: O(N) || heap_LRU_insert: O(logN)"""
     def update(self, s, a, r):  # s is 84*84*3;  a is 0 to num_actions; r is reward
