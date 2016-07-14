@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import scipy.misc
+import cPickle
 
 
 def rgb2gray(rgb):
@@ -22,8 +23,18 @@ def imshow(photo, gray=False):
     plt.show()
 
 
-if __name__ == '__main__':
+def show_wall_paper():
     img = mpimg.imread('wallpaper.jpg')
     gray = rgb2gray(img)
     gray = resize(gray, (1000, 1000))
     imshow(gray, True)
+
+if __name__ == '__main__':
+    f1 = open('game_images', mode='rb')
+    images = cPickle.load(f1)
+    print images[0].size, images[0].shape
+    for i in range(1, len(images)):
+        # imshow(images[i])
+        # print np.sum(images[i]-images[i-1])
+        raw_input()
+

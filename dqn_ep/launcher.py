@@ -16,8 +16,10 @@ import numpy as np
 import theano
 
 import ale_experiment
-import ale_agent
+import dqn_agent
 import q_network
+import EC_agent
+import EC_functions
 
 
 def process_args(args, defaults, description):
@@ -143,6 +145,32 @@ def process_args(args, defaults, description):
                         help=('Whether to use deterministic backprop. ' +
                               '(default: %(default)s)'))
 
+    parser.add_argument('--use-ec', dest='use_episodic_control',
+                        type=bool, default=defaults.EPISODIC_CONTROL,
+                        help='use episodic control')
+    parser.add_argument('--use-dqn', dest='use_dqn',
+                        type=bool, default=defaults.DQN,
+                        help='use dqn')
+    parser.add_argument('--knn', dest='knn',
+                        type=int, default=defaults.K_NEAREST_NEIGHBOR,
+                        help='k nearest neighbor')
+    parser.add_argument('--ec-discount', dest='ec_discount',
+                        type=float, default=defaults.EC_DISCOUNT,
+                        help='episodic control discount')
+    parser.add_argument('--buffer-size', dest='buffer_size',
+                        type=int, default=defaults.BUFFER_SIZE,
+                        help='buffer size for each action in episodic control')
+
+    parser.add_argument('--state-dimension', dest='state_dimension',
+                        type=int, default=defaults.DIMENSION_OF_STATE,
+                        help='the dimension of the stored state')
+    parser.add_argument('--projection-type', dest='projection_type',
+                        type=str, default=defaults.PROJECTION_TYPE,
+                        help='the type of the ec projection')
+    parser.add_argument('--qec-table', dest='qec_table',
+                        type=str, default=None,
+                        help='Qec table file for episodic control')
+
     parameters = parser.parse_args(args)
     if parameters.experiment_prefix is None:
         name = os.path.splitext(os.path.basename(parameters.rom))[0]
@@ -207,36 +235,61 @@ def launch(args, defaults, description):
 
     num_actions = len(ale.getMinimalActionSet())
 
-    if parameters.nn_file is None:
-        network = q_network.DeepQLearner(defaults.RESIZED_WIDTH,
-                                         defaults.RESIZED_HEIGHT,
-                                         num_actions,
-                                         parameters.phi_length,
-                                         parameters.discount,
-                                         parameters.learning_rate,
-                                         parameters.rms_decay,
-                                         parameters.rms_epsilon,
-                                         parameters.momentum,
-                                         parameters.clip_delta,
-                                         parameters.freeze_interval,
-                                         parameters.batch_size,
-                                         parameters.network_type,
-                                         parameters.update_rule,
-                                         parameters.batch_accumulator,
-                                         rng)
-    else:
-        handle = open(parameters.nn_file, 'r')
-        network = cPickle.load(handle)
+    agent = None
 
-    agent = ale_agent.NeuralAgent(network,
-                                  parameters.epsilon_start,
-                                  parameters.epsilon_min,
-                                  parameters.epsilon_decay,
-                                  parameters.replay_memory_size,
-                                  parameters.experiment_prefix,
-                                  parameters.replay_start_size,
-                                  parameters.update_frequency,
-                                  rng)
+    if parameters.use_dqn:
+        if parameters.nn_file is None:
+            network = q_network.DeepQLearner(defaults.RESIZED_WIDTH,
+                                             defaults.RESIZED_HEIGHT,
+                                             num_actions,
+                                             parameters.phi_length,
+                                             parameters.discount,
+                                             parameters.learning_rate,
+                                             parameters.rms_decay,
+                                             parameters.rms_epsilon,
+                                             parameters.momentum,
+                                             parameters.clip_delta,
+                                             parameters.freeze_interval,
+                                             parameters.batch_size,
+                                             parameters.network_type,
+                                             parameters.update_rule,
+                                             parameters.batch_accumulator,
+                                             rng)
+        else:
+            handle = open(parameters.nn_file, 'r')
+            network = cPickle.load(handle)
+
+        agent = dqn_agent.NeuralAgent(network,
+                                      parameters.epsilon_start,
+                                      parameters.epsilon_min,
+                                      parameters.epsilon_decay,
+                                      parameters.replay_memory_size,
+                                      parameters.experiment_prefix,
+                                      parameters.replay_start_size,
+                                      parameters.update_frequency,
+                                      rng)
+    else:
+        if parameters.use_episodic_control:
+            if parameters.qec_table is None:
+                qec_table = EC_functions.QECTable(parameters.knn,
+                                                  parameters.state_dimension,
+                                                  parameters.projection_type,
+                                                  defaults.RESIZED_WIDTH*defaults.RESIZED_HEIGHT,
+                                                  parameters.buffer_size,
+                                                  num_actions,
+                                                  rng)
+            else:
+                handle = open(parameters.qec_table, 'r')
+                qec_table = cPickle.load(handle)
+
+            agent = EC_agent.EpisodicControl(qec_table,
+                                             parameters.ec_discount,
+                                             num_actions,
+                                             parameters.epsilon_start,
+                                             parameters.epsilon_min,
+                                             parameters.epsilon_decay,
+                                             parameters.experiment_prefix,
+                                             rng)
 
     experiment = ale_experiment.ALEExperiment(ale, agent,
                                               defaults.RESIZED_WIDTH,

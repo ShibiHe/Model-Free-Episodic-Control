@@ -66,7 +66,7 @@ class ALEExperiment(object):
         testing - True if this Epoch is used for testing and not training
 
         """
-        self.terminal_lol = False # Make sure each epoch starts with a reset.
+        self.terminal_lol = False  # Make sure each epoch starts with a reset.
         steps_left = num_steps
         while steps_left > 0:
             prefix = "testing" if testing else "training"
@@ -88,7 +88,7 @@ class ALEExperiment(object):
             if self.max_start_nullops > 0:
                 random_actions = self.rng.randint(0, self.max_start_nullops+1)
                 for _ in range(random_actions):
-                    self._act(0) # Null action
+                    self._act(0)  # Null action
 
         # Make sure the screen buffer is filled at the beginning of
         # each episode...

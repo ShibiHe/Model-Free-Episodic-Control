@@ -8,6 +8,7 @@ import theano
 
 floatX = theano.config.floatX
 
+
 class DataSet(object):
     """A replay memory consisting of circular buffers for observed images,
 actions, and rewards.
