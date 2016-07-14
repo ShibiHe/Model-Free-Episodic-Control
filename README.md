@@ -30,21 +30,19 @@ Personally, I recommend using OpenAI gym because it not only can be installed by
 
 ###Dependencies for running DQN
 
-[Arcade Learning Environment]([https://github.com/mgbellemare/Arcade-Learning-Environment](https://github.com/mgbellemare/Arcade-Learning-Environment)
- or [OpenAI gym](https://github.com/openai/gym)
+[Arcade Learning Environment](https://github.com/mgbellemare/Arcade-Learning-Environment) or [OpenAI gym](https://github.com/openai/gym)
  
  Numpy and SciPy
 
-[Theano](http://deeplearning.net/software/theano/) ([https://github.com/Theano/Theano](https://github.com/Theano/Theano))
+[Theano](http://deeplearning.net/software/theano/)
 
-[Lasagne](http://lasagne.readthedocs.org/en/latest/) ([https://github.com/Lasagne/Lasagne](https://github.com/Lasagne/Lasagne)
+[Lasagne](http://lasagne.readthedocs.org/en/latest/)
 
 A reasonable GPU
 
 ###Dependencies for running Episodic Control
 
-[Arcade Learning Environment]([https://github.com/mgbellemare/Arcade-Learning-Environment](https://github.com/mgbellemare/Arcade-Learning-Environment)
- or [OpenAI gym](https://github.com/openai/gym)
+[Arcade Learning Environment](https://github.com/mgbellemare/Arcade-Learning-Environment) or [OpenAI gym](https://github.com/openai/gym)
  
  Numpy and SciPy
  
