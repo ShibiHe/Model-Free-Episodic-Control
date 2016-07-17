@@ -31,7 +31,7 @@ class ALEExperiment(object):
         self.resize_method = resize_method
         self.width, self.height = ale.getScreenDims()
 
-        self.buffer_length = 2
+        self.buffer_length = 10
         self.buffer_count = 0
         self.screen_buffer = np.empty((self.buffer_length,
                                        self.height, self.width),
@@ -86,7 +86,7 @@ class ALEExperiment(object):
             self.ale.reset_game()
 
             if self.max_start_nullops > 0:
-                random_actions = self.rng.randint(0, self.max_start_nullops+1)
+                random_actions = self.rng.randint(8, self.max_start_nullops+1)
                 for _ in range(random_actions):
                     self._act(0)  # Null action
 
@@ -94,6 +94,7 @@ class ALEExperiment(object):
         # each episode...
         self._act(0)
         self._act(0)
+
 
     def _act(self, action):
         """Perform the indicated action for a single frame, return the
@@ -153,10 +154,13 @@ class ALEExperiment(object):
     def get_observation(self):
         """ Resize and merge the previous two screen images """
 
-        assert self.buffer_count >= 2
+        assert self.buffer_count >= self.buffer_length
         index = self.buffer_count % self.buffer_length - 1
-        max_image = np.maximum(self.screen_buffer[index, ...],
-                               self.screen_buffer[index - 1, ...])
+        # max_image = np.maximum(self.screen_buffer[index, ...],
+        #                        self.screen_buffer[index - 1, ...])
+        max_image = self.screen_buffer[index]
+        for i in range(self.buffer_length):
+            max_image = np.maximum(max_image, self.screen_buffer[index-i, ...])
         return self.resize_image(max_image)
 
     def resize_image(self, image):

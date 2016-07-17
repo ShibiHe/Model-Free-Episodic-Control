@@ -199,3 +199,6 @@ class EpisodicControl(object):
         if self.testing:
             writeGif(self.exp_dir + '/played.gif', self.play_images)
 
+            # handle = open('played_images', 'w+')
+            # cPickle.dump(self.play_images, handle, 2)
+

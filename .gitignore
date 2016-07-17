@@ -3,6 +3,8 @@ roms/*
 /dqn_ep/test.py
 .idea/
 
-dqn_ep/game_images
-
 dqn_ep/test_keyboard_gym.py
+
+dqn_ep/test2.py
+
+*.pkl
