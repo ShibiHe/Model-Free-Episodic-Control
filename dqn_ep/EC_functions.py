@@ -50,7 +50,7 @@ class QECTable(object):
         self.time += 0.001
 
         for node in self.ec_buffer[a]:
-            if np.allclose(node.state, state):
+            if self._similar_state(node.state, state):
                 # Q(s,a) already existed
                 node.lru_time = self.time
                 return node.QEC_value
@@ -77,13 +77,21 @@ class QECTable(object):
     def _calc_distance(a, b):
         return np.sum(np.absolute(a-b))
 
+    @staticmethod
+    def _similar_state(a, b, threshold=500.0):
+        distance = QECTable._calc_distance(a, b)
+        if distance < threshold:
+            return True
+        else:
+            return False
+
     """update Q_EC(s,a)  O(N)  check_existence: O(N) -> insert: O(1) || LRU_insert: O(N) || heap_LRU_insert: O(logN)"""
     def update(self, s, a, r):  # s is 84*84*3;  a is 0 to num_actions; r is reward
         state = np.dot(self.matrix_projection, s.flatten())
         self.time += 0.001
 
         for node in self.ec_buffer[a]:
-            if np.allclose(node.state, state):
+            if self._similar_state(node.state, state):
                 # Q(s,a) already existed
                 node.QEC_value = np.maximum(node.QEC_value, r)
                 node.lru_time = self.time
@@ -148,6 +156,14 @@ if __name__ == '__main__':
     images = [x.astype(np.float32)/255.0 for x in images]
 
     table = QECTable(2, 64, 'random', images[0].size, 3, 2, np.random.RandomState(12345))
+    distance = np.zeros((100, 100), np.float32)
+    for i in range(100):
+        for j in range(i+1, 100):
+            distance[i, j] = distance[j, i] = QECTable._calc_distance(images[i], images[j])
+    np.set_printoptions(threshold=np.inf)
+    print distance
+
+    raw_input()
     table.update(images[0], 0, 1)
     table.update(images[1], 0, 2)
     table.update(images[2], 0, 3)

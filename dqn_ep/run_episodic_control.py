@@ -67,6 +67,7 @@ class Defaults:
     BUFFER_SIZE = 1000000
     DIMENSION_OF_STATE = 64
     PROJECTION_TYPE = 'random'  # or VAE
+    TESTING = False
 
 if __name__ == "__main__":
     launcher.launch(sys.argv[1:], Defaults, __doc__)

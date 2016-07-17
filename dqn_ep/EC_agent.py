@@ -8,10 +8,12 @@ import logging
 import numpy as np
 import cPickle
 import EC_functions
+from images2gif import writeGif
 
 
 class EpisodicControl(object):
-    def __init__(self, qec_table, ec_discount, num_actions, epsilon_start, epsilon_min, epsilon_decay, exp_pref, rng):
+    def __init__(self, qec_table, ec_discount, num_actions, epsilon_start,
+                 epsilon_min, epsilon_decay, exp_pref, ec_testing, rng):
         self.qec_table = qec_table
         self.ec_discount = ec_discount
         self.num_actions = num_actions
@@ -54,6 +56,9 @@ class EpisodicControl(object):
         self.last_action = None
 
         self.steps_sec_ema = 0.
+
+        self.play_images = []
+        self.testing = ec_testing
 
     def _open_results_file(self):
         logging.info("OPENING " + self.exp_dir + '/results.csv')
@@ -155,14 +160,6 @@ class EpisodicControl(object):
 
         # Store the latest sample.
         self.trace_list.add_trace(self.last_img, self.last_action, np.clip(reward, -1, 1), True)
-        """
-        do update
-        """
-        q_return = 0.
-        for i in range(len(self.trace_list.trace_list)-1, -1, -1):
-            node = self.trace_list.trace_list[i]
-            q_return = q_return * self.ec_discount + node.reward
-            self.qec_table.update(node.image, node.action, q_return)
 
         # calculate time
         rho = 0.98
@@ -171,6 +168,21 @@ class EpisodicControl(object):
         logging.info("steps/second: {:.2f}, avg: {:.2f}".format(
             self.step_counter/total_time, self.steps_sec_ema))
         logging.info('episode {} reward: {:.2f}'.format(self.total_episodes, self.episode_reward))
+
+        if self.testing:
+            for node in self.trace_list.trace_list:
+                self.play_images.append(node.image)
+            # skip the update process
+            return
+
+        """
+        do update
+        """
+        q_return = 0.
+        for i in range(len(self.trace_list.trace_list)-1, -1, -1):
+            node = self.trace_list.trace_list[i]
+            q_return = q_return * self.ec_discount + node.reward
+            self.qec_table.update(node.image, node.action, q_return)
 
     def finish_epoch(self, epoch):
         qec_file = open(self.exp_dir + '/qec_table_file_' + str(epoch) + \
@@ -183,4 +195,7 @@ class EpisodicControl(object):
         self.total_reward = 0
 
         # EC_functions.print_table(self.qec_table)
+
+        if self.testing:
+            writeGif(self.exp_dir + '/played.gif', self.play_images)
 

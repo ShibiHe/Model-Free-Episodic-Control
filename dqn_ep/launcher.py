@@ -145,6 +145,7 @@ def process_args(args, defaults, description):
                         help=('Whether to use deterministic backprop. ' +
                               '(default: %(default)s)'))
 
+    # for episodic control
     parser.add_argument('--use-ec', dest='use_episodic_control',
                         type=bool, default=defaults.EPISODIC_CONTROL,
                         help='use episodic control')
@@ -160,7 +161,6 @@ def process_args(args, defaults, description):
     parser.add_argument('--buffer-size', dest='buffer_size',
                         type=int, default=defaults.BUFFER_SIZE,
                         help='buffer size for each action in episodic control')
-
     parser.add_argument('--state-dimension', dest='state_dimension',
                         type=int, default=defaults.DIMENSION_OF_STATE,
                         help='the dimension of the stored state')
@@ -170,6 +170,9 @@ def process_args(args, defaults, description):
     parser.add_argument('--qec-table', dest='qec_table',
                         type=str, default=None,
                         help='Qec table file for episodic control')
+    parser.add_argument('--ec-testing', dest='ec_testing',
+                        type=bool, default=defaults.TESTING,
+                        help='used for episodic_control_run.py to test a qec_table')
 
     parameters = parser.parse_args(args)
     if parameters.experiment_prefix is None:
@@ -289,6 +292,7 @@ def launch(args, defaults, description):
                                              parameters.epsilon_min,
                                              parameters.epsilon_decay,
                                              parameters.experiment_prefix,
+                                             parameters.ec_testing,
                                              rng)
 
     experiment = ale_experiment.ALEExperiment(ale, agent,
