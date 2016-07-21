@@ -206,7 +206,7 @@ class DeepQLearner:
         self.actions_shared.set_value(actions)
         self.rewards_shared.set_value(rewards)
         self.terminals_shared.set_value(terminals)
-        if not evaluation:
+        if evaluation is not None:
             self.evaluation_shared.set_value(evaluation)
         if self.freeze_interval > 0 and self.update_counter % self.freeze_interval == 0:
             self.reset_q_hat()
