@@ -29,7 +29,7 @@ class DeepQLearner:
                  num_frames, discount, learning_rate, rho,
                  rms_epsilon, momentum, clip_delta, freeze_interval,
                  batch_size, network_type, update_rule,
-                 batch_accumulator, rng, input_scale=255.0):
+                 batch_accumulator, rng, input_scale=255.0, use_ec=False):
 
         self.input_width = input_width
         self.input_height = input_height
@@ -63,6 +63,8 @@ class DeepQLearner:
         actions = T.icol('actions')
         terminals = T.icol('terminals')
 
+        evaluation = T.col('evaluation')
+
         # Shared variables for training from a minibatch of replayed
         # state transitions, each consisting of num_frames + 1 (due to
         # overlap) images, along with the chosen action and resulting
@@ -78,6 +80,11 @@ class DeepQLearner:
             broadcastable=(False, True))
         self.terminals_shared = theano.shared(
             np.zeros((batch_size, 1), dtype='int32'),
+            broadcastable=(False, True))
+
+        # shared variable for ec_dqn train
+        self.evaluation_shared = theano.shared(
+            np.zeros((batch_size, 1), dtype=theano.config.floatX),
             broadcastable=(False, True))
 
         # Shared variable for a single state, to calculate q_vals.
@@ -98,10 +105,13 @@ class DeepQLearner:
         terminalsX = terminals.astype(theano.config.floatX)
         actionmask = T.eq(T.arange(num_actions).reshape((1, -1)),
                           actions.reshape((-1, 1))).astype(theano.config.floatX)
-
         target = (rewards +
                   (T.ones_like(terminalsX) - terminalsX) *
                   self.discount * T.max(next_q_vals, axis=1, keepdims=True))
+
+        if use_ec:
+            target = T.maximum(target, evaluation)
+
         output = (q_vals * actionmask).sum(axis=1).reshape((-1, 1))
         diff = target - output
 
@@ -134,7 +144,8 @@ class DeepQLearner:
             next_states: self.imgs_shared[:, 1:],
             rewards: self.rewards_shared,
             actions: self.actions_shared,
-            terminals: self.terminals_shared
+            terminals: self.terminals_shared,
+            evaluation: self.evaluation_shared
         }
         if update_rule == 'deepmind_rmsprop':
             updates = deepmind_rmsprop(loss, params, self.lr, self.rho,
@@ -152,7 +163,7 @@ class DeepQLearner:
                                                      self.momentum)
 
         self._train = theano.function([], [loss], updates=updates,
-                                      givens=train_givens)
+                                      givens=train_givens, on_unused_input='warn')
         q_givens = {
             states: self.state_shared.reshape((1,
                                                self.num_frames,
@@ -176,7 +187,7 @@ class DeepQLearner:
         else:
             raise ValueError("Unrecognized network: {}".format(network_type))
 
-    def train(self, imgs, actions, rewards, terminals):
+    def train(self, imgs, actions, rewards, terminals, evaluation=None):
         """
         Train one batch.
 
@@ -195,8 +206,9 @@ class DeepQLearner:
         self.actions_shared.set_value(actions)
         self.rewards_shared.set_value(rewards)
         self.terminals_shared.set_value(terminals)
-        if (self.freeze_interval > 0 and
-            self.update_counter % self.freeze_interval == 0):
+        if not evaluation:
+            self.evaluation_shared.set_value(evaluation)
+        if self.freeze_interval > 0 and self.update_counter % self.freeze_interval == 0:
             self.reset_q_hat()
         loss = self._train()
         self.update_counter += 1

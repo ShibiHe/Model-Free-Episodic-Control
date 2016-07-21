@@ -78,9 +78,9 @@ class QECTable(object):
         return np.sum(np.absolute(a-b))
 
     @staticmethod
-    def _similar_state(a, b, threshold=500.0):
-        distance = QECTable._calc_distance(a, b)
-        if distance < threshold:
+    def _similar_state(a, b, threshold=100.0):
+        dist = QECTable._calc_distance(a, b)
+        if dist < threshold:
             return True
         else:
             return False

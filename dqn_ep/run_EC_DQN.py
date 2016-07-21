@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+__author__ = 'frankhe'
 """
 Execute DQN or Episodic control
 
@@ -41,7 +42,7 @@ class Defaults:
                  # and the squared gradient.
     CLIP_DELTA = 1.0
     EPSILON_START = 1.0
-    EPSILON_MIN = .1
+    EPSILON_MIN = .005
     EPSILON_DECAY = 1000000
     PHI_LENGTH = 4
     UPDATE_FREQUENCY = 4
@@ -59,10 +60,10 @@ class Defaults:
     CUDNN_DETERMINISTIC = False
 
     DQN = True
-    EPISODIC_CONTROL = False
+    EPISODIC_CONTROL = True
     K_NEAREST_NEIGHBOR = 11
     EC_DISCOUNT = 1.0
-    BUFFER_SIZE = 1000000
+    BUFFER_SIZE = 10000
     DIMENSION_OF_STATE = 64
     PROJECTION_TYPE = 'random'  # or VAE
     TESTING = False

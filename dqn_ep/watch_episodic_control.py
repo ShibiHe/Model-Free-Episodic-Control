@@ -1,6 +1,10 @@
 #! /usr/bin/env python
+__author__ = 'frankhe'
+
 """
-Execute DQN or Episodic control
+watch Episodic control
+running:
+python watch_episodic_control.py --qec-table qec_table_file.pkl
 
 """
 
@@ -12,9 +16,9 @@ class Defaults:
     # ----------------------
     # Experiment Parameters
     # ----------------------
-    STEPS_PER_EPOCH = 250000
-    EPOCHS = 200
-    STEPS_PER_TEST = 125000
+    STEPS_PER_EPOCH = 50
+    EPOCHS = 1
+    STEPS_PER_TEST = 0
 
     # ----------------------
     # ALE Parameters
@@ -40,9 +44,9 @@ class Defaults:
                  # rho/RMS_DECAY to track both the history of the gradient
                  # and the squared gradient.
     CLIP_DELTA = 1.0
-    EPSILON_START = 1.0
-    EPSILON_MIN = .1
-    EPSILON_DECAY = 1000000
+    EPSILON_START = .005
+    EPSILON_MIN = .005
+    EPSILON_DECAY = 0
     PHI_LENGTH = 4
     UPDATE_FREQUENCY = 4
     REPLAY_MEMORY_SIZE = 1000000
@@ -58,14 +62,14 @@ class Defaults:
     DETERMINISTIC = True
     CUDNN_DETERMINISTIC = False
 
-    DQN = True
-    EPISODIC_CONTROL = False
+    DQN = False
+    EPISODIC_CONTROL = True
     K_NEAREST_NEIGHBOR = 11
     EC_DISCOUNT = 1.0
     BUFFER_SIZE = 1000000
     DIMENSION_OF_STATE = 64
     PROJECTION_TYPE = 'random'  # or VAE
-    TESTING = False
+    TESTING = True
 
 if __name__ == "__main__":
     launcher.launch(sys.argv[1:], Defaults, __doc__)

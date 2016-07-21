@@ -95,7 +95,6 @@ class ALEExperiment(object):
         self._act(0)
         self._act(0)
 
-
     def _act(self, action):
         """Perform the indicated action for a single frame, return the
         resulting reward and store the resulting screen image in the
