@@ -46,6 +46,8 @@ class QECTable(object):
 
     """estimate the value of Q_EC(s,a)  O(N*logK*D)  check existence: O(N) -> KNN: O(D*N*logK)"""
     def estimate(self, s, a):
+        if type(a) == np.ndarray:
+            a = a[0]
         state = np.dot(self.matrix_projection, s.flatten())
         self.time += 0.001
 
@@ -87,6 +89,8 @@ class QECTable(object):
 
     """update Q_EC(s,a)  O(N)  check_existence: O(N) -> insert: O(1) || LRU_insert: O(N) || heap_LRU_insert: O(logN)"""
     def update(self, s, a, r):  # s is 84*84*3;  a is 0 to num_actions; r is reward
+        if type(a) == np.ndarray:
+            a = a[0]
         state = np.dot(self.matrix_projection, s.flatten())
         self.time += 0.001
 

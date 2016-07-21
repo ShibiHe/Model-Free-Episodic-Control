@@ -642,7 +642,7 @@ class EC_DQN(object):
         differently.
         """
         imgs, actions, rewards, terminals = self.data_set.random_batch(self.network.batch_size)
-        evaluation = np.zeros(self.network.batch_size, np.float32)
+        evaluation = np.zeros((self.network.batch_size, 1), np.float32)
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
             evaluation[i] = self.qec_table.estimate(state, actions[i])
