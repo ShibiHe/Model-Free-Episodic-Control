@@ -8,3 +8,5 @@ dqn_ep/test_keyboard_gym.py
 dqn_ep/test2.py
 
 *.pkl
+
+/dqn_ep/run_EC_DQN.py
