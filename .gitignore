@@ -9,4 +9,4 @@ dqn_ep/test2.py
 
 *.pkl
 
-/dqn_ep/run_EC_DQN.py
+dqn_ep/run_ECDQN.py
