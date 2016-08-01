@@ -73,13 +73,15 @@ class EpisodicControl(object):
     def _open_results_file(self):
         logging.info("OPENING " + self.exp_dir + '/results.csv')
         self.results_file = open(self.exp_dir + '/results.csv', 'w', 0)
-        self.results_file.write('epoch, episode_nums, total_reward, avg_reward, total time, epoch time\n')
+        self.results_file.write('epoch, episode_nums, total_reward, avg_reward, epoch time, total time\n')
         self.results_file.flush()
 
     def _update_results_file(self, epoch, total_episodes, total_reward):
         this_time = time.time()
+        total_time = this_time-self.program_start_time
+        epoch_time = this_time-self.last_count_time
         out = "{},{},{},{},{},{}\n".format(epoch, total_episodes, total_reward, total_reward/total_episodes,
-                                           this_time-self.program_start_time, this_time-self.last_count_time)
+                                           epoch_time, total_time)
         self.last_count_time = this_time
         self.results_file.write(out)
         self.results_file.flush()
