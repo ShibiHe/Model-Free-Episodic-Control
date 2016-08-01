@@ -201,10 +201,11 @@ class EpisodicControl(object):
                 last_q_return = q_return
 
     def finish_epoch(self, epoch):
-        qec_file = open(self.exp_dir + '/qec_table_file_' + str(epoch) + \
-                        '.pkl', 'w')
-        cPickle.dump(self.qec_table, qec_file, 2)
-        qec_file.close()
+        # too large
+        # qec_file = open(self.exp_dir + '/qec_table_file_' + str(epoch) + \
+        #                 '.pkl', 'w')
+        # cPickle.dump(self.qec_table, qec_file, 2)
+        # qec_file.close()
 
         self._update_results_file(epoch, self.total_episodes, self.total_reward)
         self.total_episodes = 0
