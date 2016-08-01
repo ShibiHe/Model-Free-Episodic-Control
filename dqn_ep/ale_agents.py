@@ -64,14 +64,23 @@ class EpisodicControl(object):
         self.play_images = []
         self.testing = ec_testing
 
+        self.program_start_time = None
+        self.last_count_time = None
+
+    def time_count_start(self):
+        self.last_count_time = self.program_start_time = time.time()
+
     def _open_results_file(self):
         logging.info("OPENING " + self.exp_dir + '/results.csv')
         self.results_file = open(self.exp_dir + '/results.csv', 'w', 0)
-        self.results_file.write('epoch, episode_nums, total_reward, avg_reward\n')
+        self.results_file.write('epoch, episode_nums, total_reward, avg_reward, total time, epoch time\n')
         self.results_file.flush()
 
     def _update_results_file(self, epoch, total_episodes, total_reward):
-        out = "{},{},{},{}\n".format(epoch, total_episodes, total_reward, total_reward/total_episodes)
+        this_time = time.time()
+        out = "{},{},{},{},{},{}\n".format(epoch, total_episodes, total_reward, total_reward/total_episodes,
+                                           this_time-self.program_start_time, this_time-self.last_count_time)
+        self.last_count_time = this_time
         self.results_file.write(out)
         self.results_file.flush()
 
@@ -183,10 +192,13 @@ class EpisodicControl(object):
         do update
         """
         q_return = 0.
+        last_q_return = -1.0
         for i in range(len(self.trace_list.trace_list)-1, -1, -1):
             node = self.trace_list.trace_list[i]
             q_return = q_return * self.ec_discount + node.reward
-            self.qec_table.update(node.image, node.action, q_return)
+            if not np.isclose(q_return, last_q_return):
+                self.qec_table.update(node.image, node.action, q_return)
+                last_q_return = q_return
 
     def finish_epoch(self, epoch):
         qec_file = open(self.exp_dir + '/qec_table_file_' + str(epoch) + \
@@ -278,11 +290,19 @@ class NeuralAgent(object):
         # Exponential moving average of runtime performance.
         self.steps_sec_ema = 0.
 
+        self.program_start_time = None
+        self.last_count_time = None
+        self.epoch_time = None
+        self.total_time = None
+
+    def time_count_start(self):
+        self.last_count_time = self.program_start_time = time.time()
+
     def _open_results_file(self):
         logging.info("OPENING " + self.exp_dir + '/results.csv')
         self.results_file = open(self.exp_dir + '/results.csv', 'w', 0)
         self.results_file.write(\
-            'epoch,num_episodes,total_reward,reward_per_epoch,mean_q\n')
+            'epoch,num_episodes,total_reward,reward_per_epoch,mean_q, epoch time, total time\n')
         self.results_file.flush()
 
     def _open_learning_file(self):
@@ -291,9 +311,10 @@ class NeuralAgent(object):
         self.learning_file.flush()
 
     def _update_results_file(self, epoch, num_episodes, holdout_sum):
-        out = "{},{},{},{},{}\n".format(epoch, num_episodes, self.total_reward,
+        out = "{},{},{},{},{},{},{}\n".format(epoch, num_episodes, self.total_reward,
                                         self.total_reward / float(num_episodes),
-                                        holdout_sum)
+                                        holdout_sum, self.epoch_time, self.total_time)
+        self.last_count_time = time.time()
         self.results_file.write(out)
         self.results_file.flush()
 
@@ -464,6 +485,9 @@ class NeuralAgent(object):
                         '.pkl', 'w')
         cPickle.dump(self.network, net_file, -1)
         net_file.close()
+        this_time = time.time()
+        self.total_time = this_time-self.program_start_time
+        self.epoch_time = this_time-self.last_count_time
 
     def start_testing(self):
         self.testing = True
@@ -565,12 +589,19 @@ class EC_DQN(object):
 
         # Exponential moving average of runtime performance.
         self.steps_sec_ema = 0.
+        self.program_start_time = None
+        self.last_count_time = None
+        self.epoch_time = None
+        self.total_time = None
+
+    def time_count_start(self):
+        self.program_start_time = time.time()
 
     def _open_results_file(self):
         logging.info("OPENING " + self.exp_dir + '/results.csv')
         self.results_file = open(self.exp_dir + '/results.csv', 'w', 0)
         self.results_file.write(\
-            'epoch,num_episodes,total_reward,reward_per_epoch,mean_q\n')
+            'epoch,num_episodes,total_reward,reward_per_epoch,mean_q, epoch time, total time\n')
         self.results_file.flush()
 
     def _open_learning_file(self):
@@ -579,9 +610,10 @@ class EC_DQN(object):
         self.learning_file.flush()
 
     def _update_results_file(self, epoch, num_episodes, holdout_sum):
-        out = "{},{},{},{},{}\n".format(epoch, num_episodes, self.total_reward,
+        out = "{},{},{},{},{},{},{}\n".format(epoch, num_episodes, self.total_reward,
                                         self.total_reward / float(num_episodes),
-                                        holdout_sum)
+                                        holdout_sum, self.epoch_time, self.total_time)
+        self.last_count_time = time.time()
         self.results_file.write(out)
         self.results_file.flush()
 
@@ -724,11 +756,14 @@ class EC_DQN(object):
                                      np.clip(reward, -1, 1),
                                      True)
             """update"""
-            q_return = 0
+            q_return = 0.
+            last_q_return = -1.0
             index = (self.data_set.top-1) % self.data_set.max_steps
             while True:
                 q_return = q_return * self.network.discount + self.data_set.rewards[index]
-                self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
+                if not np.isclose(q_return, last_q_return):
+                    self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
+                    last_q_return = q_return
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
@@ -750,6 +785,9 @@ class EC_DQN(object):
                         '.pkl', 'w')
         cPickle.dump(self.network, net_file, -1)
         net_file.close()
+        this_time = time.time()
+        self.total_time = this_time-self.program_start_time
+        self.epoch_time = this_time-self.last_count_time
 
     def start_testing(self):
         self.testing = True

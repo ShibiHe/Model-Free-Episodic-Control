@@ -46,6 +46,7 @@ class ALEExperiment(object):
         Run the desired number of training epochs, a testing epoch
         is conducted after each training epoch.
         """
+        self.agent.time_count_start()
         for epoch in range(1, self.num_epochs + 1):
             self.run_epoch(epoch, self.epoch_length)
             self.agent.finish_epoch(epoch)

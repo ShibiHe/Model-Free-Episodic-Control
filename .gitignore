@@ -15,3 +15,5 @@ dqn_ep/run_EC_DQN.py
 *.ann
 
 dqn_ep/test3.py
+
+dqn_ep/see.gif

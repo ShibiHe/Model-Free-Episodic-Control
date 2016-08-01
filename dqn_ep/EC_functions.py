@@ -4,6 +4,7 @@ import cPickle
 import heapq
 from annoy import AnnoyIndex
 import image_preprocessing as ip
+import logging
 
 
 class Buffer(object):
@@ -21,11 +22,13 @@ class Buffer(object):
         self.update_frequency = frequency
 
     def update_annoy(self, time):
+        print 'rebuild annoy'
         self.annoy = AnnoyIndex(self.state_dimension)
         for i in xrange(self.items):
             self.annoy.add_item(i, self.state[i])
         self.annoy.build(self.n_trees)
         self.last_annoy_built_time = time
+        print 'rebuild done'
 
 
 class DistanceNode(object):
@@ -151,6 +154,7 @@ class QECTable(object):
             buffer_a.items += 1
         else:
             i = np.argmin(buffer_a.lru)
+        # logging.info('insert at {}'.format(buffer_a.insert_times))
         buffer_a.insert_times += 1
         buffer_a.state[i] = state
         buffer_a.q_return[i] = r
@@ -182,5 +186,45 @@ class TraceRecorder(object):
         self.trace_list.append(node)
 
 
+def print_table(table):
+    a = 0
+    for action_buffer in table.ec_buffer:
+        print 'action buffer of ', a, 'length=', action_buffer.items
+        a += 1
+        for i in range(action_buffer.items):
+            print '(', action_buffer.lru[i], action_buffer.q_return[i], ')',
+        print
+    print
+
+if __name__ == '__main__':
+    images = cPickle.load(open('game_images', mode='rb'))
+    images = [x.astype(np.float32)/255.0 for x in images]
+    # from images2gif import writeGif
+    # writeGif('see.gif', images)
+
+    table = QECTable(2, 64, 'random', images[0].size, 10, 2, np.random.RandomState(12345), 10, 1, 10)
+    # distance = np.zeros((100, 100), np.float32)
+    # for i in range(100):
+    #     for j in range(i+1, 100):
+    #         distance[i, j] = distance[j, i] = QECTable._calc_distance(images[i], images[j])
+    # np.set_printoptions(threshold=np.inf)
+    # print distance
+    #
+    # raw_input()
+    table.update(images[0], 0, 1)
+    table.update(images[1], 0, 2)
+    table.update(images[2], 0, 3)
+    table.update(images[3], 0, 4)
+    table.update(images[4], 0, 5)
+    table.update(images[5], 0, 6)
+    table.update(images[6], 0, 7)
+    table.update(images[33], 0, 8)
+    table.update(images[34], 0, 9)
+    table.update(images[35], 0, 10)
+    table.update(images[36], 0, 11)
+    print_table(table)
+    table.update(images[37], 0, 12)
+    table.update(images[38], 0, 13)
+    print_table(table)
 
 
