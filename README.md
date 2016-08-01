@@ -4,9 +4,11 @@ This is the implementation of DQN and Model Free Episodic Control
 #Introduction
 This package provides DQN and Episodic Control. The DQN implementation is based on [spragunr/deep_q_rl](https://github.com/spragunr/deep_q_rl) and the Episodic Control is written by myself.
 
-[Model-Free Episodic Control](http://arxiv.org/abs/1606.04460), C. Blundell et al., *arXiv*, 2016.
+[Model Free Episodic Control](http://arxiv.org/abs/1606.04460), C. Blundell et al., *arXiv*, 2016.
 
 [Human-level control through deep reinforcement learning](http://www.nature.com/nature/journal/v518/n7540/pdf/nature14236.pdf), V. Mnih et al., *Nature*, 2015.
+
+I have contacted the author C. Blundell of Model Free Episodic Control. He told me he was using approximate KNN to speed up episodic control, however, he did not tell me details. So I used [annoy](https://github.com/spotify/annoy to do KNN, and I rebuild the search tree frequently.
 
 #Dependencies
 
@@ -45,6 +47,8 @@ A reasonable GPU
 [Arcade Learning Environment](https://github.com/mgbellemare/Arcade-Learning-Environment) or [OpenAI gym](https://github.com/openai/gym)
  
  Numpy and SciPy
+
+[annoy](https://github.com/spotify/annoy) for approximate KNN
  
  A reasonable CPU
  
