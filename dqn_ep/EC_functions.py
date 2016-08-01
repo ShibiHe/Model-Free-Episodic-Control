@@ -161,7 +161,7 @@ class QECTable(object):
         buffer_a.lru[i] = self.time
 
         if buffer_a.annoy is None:
-            if buffer_a.insert_times == self.buffer_maximum_size:
+            if buffer_a.insert_times == np.min(10000, self.buffer_maximum_size):
                 buffer_a.update_annoy(self.time)
                 buffer_a.insert_times = 0
         else:
