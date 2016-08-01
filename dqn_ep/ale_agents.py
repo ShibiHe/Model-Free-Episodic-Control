@@ -595,7 +595,7 @@ class EC_DQN(object):
         self.total_time = None
 
     def time_count_start(self):
-        self.program_start_time = time.time()
+        self.last_count_time = self.program_start_time = time.time()
 
     def _open_results_file(self):
         logging.info("OPENING " + self.exp_dir + '/results.csv')
