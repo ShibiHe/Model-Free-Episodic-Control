@@ -57,7 +57,8 @@ class QECTable(object):
 
     def _initialize_projection_function(self, dimension_result, dimension_observation, p_type):
         if p_type == 'random':
-            self.matrix_projection = self.rng.randn(dimension_result, dimension_observation).astype(np.float32)
+            self.matrix_projection = self.rng.normal(loc=0.0, scale=1.0/np.sqrt(dimension_result),
+                                                     size=(dimension_result, dimension_observation)).astype(np.float32)
         elif p_type == 'VAE':
             pass
         else:
