@@ -194,13 +194,14 @@ class EpisodicControl(object):
         do update
         """
         q_return = 0.
-        last_q_return = -1.0
+        # last_q_return = -1.0
         for i in range(len(self.trace_list.trace_list)-1, -1, -1):
             node = self.trace_list.trace_list[i]
             q_return = q_return * self.ec_discount + node.reward
-            if not np.isclose(q_return, last_q_return):
-                self.qec_table.update(node.image, node.action, q_return)
-                last_q_return = q_return
+            self.qec_table.update(node.image, node.action, q_return)
+            # if not np.isclose(q_return, last_q_return):
+            #     self.qec_table.update(node.image, node.action, q_return)
+            #     last_q_return = q_return
 
     def finish_epoch(self, epoch):
         # so large that i only keep one
@@ -760,13 +761,14 @@ class EC_DQN(object):
                                      True)
             """update"""
             q_return = 0.
-            last_q_return = -1.0
+            # last_q_return = -1.0
             index = (self.data_set.top-1) % self.data_set.max_steps
             while True:
                 q_return = q_return * self.network.discount + self.data_set.rewards[index]
-                if not np.isclose(q_return, last_q_return):
-                    self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
-                    last_q_return = q_return
+                # if not np.isclose(q_return, last_q_return):
+                #     self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
+                #     last_q_return = q_return
+                self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
