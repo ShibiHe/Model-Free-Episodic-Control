@@ -173,13 +173,7 @@ def process_args(args, defaults, description):
                         help='used for episodic_control_run.py to test a qec_table')
     parser.add_argument('--rebuild-knn-frequency', dest='rebuild_knn_frequency',
                         type=int, default=defaults.REBUILD_KNN_FREQUENCY,
-                        help='rebuild frequency for approximate knn')
-    parser.add_argument('--n-trees', dest='n_trees',
-                        type=int, default=defaults.N_TREES,
-                        help='annoy parameter n_trees')
-    parser.add_argument('--search-k', dest='search_k',
-                        type=int, default=defaults.SEARCH_K,
-                        help='annoy parameter search_k')
+                        help='rebuild frequency for knn')
 
     parameters = parser.parse_args(args)
     if parameters.experiment_prefix is None:
@@ -277,9 +271,7 @@ def launch(args, defaults, description):
                                               parameters.buffer_size,
                                               num_actions,
                                               rng,
-                                              parameters.rebuild_knn_frequency,
-                                              parameters.n_trees,
-                                              parameters.search_k)
+                                              parameters.rebuild_knn_frequency)
         else:
             handle = open(parameters.qec_table, 'r')
             qec_table = cPickle.load(handle)
@@ -339,9 +331,7 @@ def launch(args, defaults, description):
                                                   parameters.buffer_size,
                                                   num_actions,
                                                   rng,
-                                                  parameters.rebuild_knn_frequency,
-                                                  parameters.n_trees,
-                                                  parameters.search_k)
+                                                  parameters.rebuild_knn_frequency)
             else:
                 handle = open(parameters.qec_table, 'r')
                 qec_table = cPickle.load(handle)

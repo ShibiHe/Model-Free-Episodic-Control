@@ -784,6 +784,12 @@ class EC_DQN(object):
                                 np.mean(self.loss_averages)))
 
     def finish_epoch(self, epoch):
+        # so large that i only keep one
+        qec_file = open(self.exp_dir + '/qec_table_file_' + \
+                        '.pkl', 'w')
+        cPickle.dump(self.qec_table, qec_file, 2)
+        qec_file.close()
+
         net_file = open(self.exp_dir + '/network_file_' + str(epoch) + \
                         '.pkl', 'w')
         cPickle.dump(self.network, net_file, -1)

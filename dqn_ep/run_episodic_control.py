@@ -66,8 +66,6 @@ class Defaults:
     EC_DISCOUNT = 1.0
     BUFFER_SIZE = 1000000
     REBUILD_KNN_FREQUENCY = 10000
-    N_TREES = 15
-    SEARCH_K = 10000
     DIMENSION_OF_STATE = 64
     PROJECTION_TYPE = 'random'  # or VAE
     TESTING = False

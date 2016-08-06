@@ -2,32 +2,32 @@ __author__ = 'frankhe'
 import numpy as np
 import cPickle
 import heapq
-from annoy import AnnoyIndex
+"""
+due to the KNN_runtime_test.py  we use BallTree
+"""
+from sklearn.neighbors import BallTree
 import image_preprocessing as ip
 import logging
 
 
 class Buffer(object):
-    def __init__(self, size, state_dimension, frequency, n_trees=100, search_k=1000):
+    def __init__(self, size, state_dimension, frequency):
+        self.size = size
         self.state_dimension = state_dimension
         self.lru = np.zeros(size, np.float32)
         self.state = np.zeros((size, state_dimension), np.float32)
         self.q_return = np.zeros(size, np.float32)
         self.items = 0
-        self.annoy = None
-        self.last_annoy_built_time = None
-        self.n_trees = n_trees
-        self.search_k = search_k
+        self.tree = None
+        self.last_tree_built_time = None
         self.insert_times = 0
         self.update_frequency = frequency
+        self.mini_frequency = 1000
 
-    def update_annoy(self, time):
-        print 'rebuild annoy'
-        self.annoy = AnnoyIndex(self.state_dimension)
-        for i in xrange(self.items):
-            self.annoy.add_item(i, self.state[i])
-        self.annoy.build(self.n_trees)
-        self.last_annoy_built_time = time
+    def update_tree(self, time):
+        print 'rebuild tree'
+        self.tree = BallTree(self.state[:self.items, :], leaf_size=self.size)
+        self.last_tree_built_time = time
         print 'rebuild done'
 
 
@@ -39,14 +39,14 @@ class DistanceNode(object):
 
 class QECTable(object):
     def __init__(self, knn, state_dimension, projection_type, observation_dimension, buffer_size, num_actions, rng,
-                 rebuild_frequency, n_trees, search_k):
+                 rebuild_frequency):
         self.knn = knn
         self.time = 0.0  # time stamp for LRU
         self.ec_buffer = []
         self.buffer_maximum_size = buffer_size
         self.rng = rng
         for i in range(num_actions):
-            self.ec_buffer.append(Buffer(buffer_size, state_dimension, rebuild_frequency, n_trees, search_k))
+            self.ec_buffer.append(Buffer(buffer_size, state_dimension, rebuild_frequency))
 
         # projection
         """
@@ -75,21 +75,21 @@ class QECTable(object):
 
         #  first check if we already have this state
 
-        if buffer_a.annoy is None:
-            # there is no approximate tree now
+        if buffer_a.tree is None:
+            # there is no knn tree now
             for i in xrange(buffer_a.items):
                 if self._similar_state(buffer_a.state[i], state):
                     buffer_a.lru[i] = self.time
                     return buffer_a.q_return[i]
         else:
-            nearest_item = buffer_a.annoy.get_nns_by_vector(state, 1, buffer_a.search_k)[0]
+            nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0]
             if self._similar_state(buffer_a.state[nearest_item], state):
                 buffer_a.lru[nearest_item] = self.time
                 return buffer_a.q_return[nearest_item]
 
         #  second KNN to evaluate the novel state
 
-        if buffer_a.annoy is None:
+        if buffer_a.tree is None:
             # there is no approximate tree now
             distance_list = []
             for i in xrange(buffer_a.items):
@@ -103,18 +103,18 @@ class QECTable(object):
                 buffer_a.lru[index] = self.time
             return value / self.knn
         else:
-            smallest = buffer_a.annoy.get_nns_by_vector(state, self.knn, buffer_a.search_k)
+            smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=False)
             value = 0.0
             for i in smallest:
                 value += buffer_a.q_return[i]
                 #  if this node does not change after last annoy
-                if buffer_a.lru[i] <= buffer_a.last_annoy_built_time:
+                if buffer_a.lru[i] <= buffer_a.last_tree_built_time:
                     buffer_a.lru[i] = self.time
             return value / self.knn
 
     @staticmethod
     def _calc_distance(a, b):
-        return np.sum(np.absolute(a-b))
+        return np.sum(np.absolute(a-b)**2)
 
     @staticmethod
     def _similar_state(a, b, threshold=200.0):
@@ -135,7 +135,7 @@ class QECTable(object):
 
         #  first check if we already have this state
 
-        if buffer_a.annoy is None:
+        if buffer_a.tree is None:
             # there is no approximate tree now
             for i in xrange(buffer_a.items):
                 if self._similar_state(buffer_a.state[i], state):
@@ -143,7 +143,7 @@ class QECTable(object):
                     buffer_a.lru[i] = self.time
                     return
         else:
-            nearest_item = buffer_a.annoy.get_nns_by_vector(state, 1, buffer_a.search_k)[0]
+            nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0]
             if self._similar_state(buffer_a.state[nearest_item], state):
                 buffer_a.q_return[nearest_item] = np.maximum(buffer_a.q_return[nearest_item], r)
                 buffer_a.lru[nearest_item] = self.time
@@ -161,13 +161,14 @@ class QECTable(object):
         buffer_a.q_return[i] = r
         buffer_a.lru[i] = self.time
 
-        if buffer_a.annoy is None:
-            if buffer_a.insert_times == np.minimum(10000, self.buffer_maximum_size):
-                buffer_a.update_annoy(self.time)
+        if buffer_a.tree is None:
+            if buffer_a.insert_times == np.minimum(buffer_a.mini_frequency, self.buffer_maximum_size):
+                buffer_a.update_tree(self.time)
                 buffer_a.insert_times = 0
         else:
-            if buffer_a.insert_times % buffer_a.update_frequency == 0:
-                buffer_a.update_annoy(self.time)
+            if buffer_a.insert_times % buffer_a.mini_frequency == 0:
+                buffer_a.update_tree(self.time)
+                buffer_a.mini_frequency = np.minimum(buffer_a.mini_frequency+1, buffer_a.update_frequency)
 
 
 class TraceNode(object):
