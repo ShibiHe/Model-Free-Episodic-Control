@@ -108,7 +108,7 @@ class QECTable(object):
             for i in smallest:
                 value += buffer_a.q_return[i]
                 #  if this node does not change after last annoy
-                if buffer_a.lru[i] <= buffer_a.last_tree_built_time:
+                if float(buffer_a.lru[i]) < buffer_a.last_tree_built_time:
                     buffer_a.lru[i] = self.time
             return value / self.knn
 
