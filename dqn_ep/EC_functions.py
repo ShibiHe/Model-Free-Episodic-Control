@@ -82,7 +82,7 @@ class QECTable(object):
                     buffer_a.lru[i] = self.time
                     return buffer_a.q_return[i]
         else:
-            nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0]
+            nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0, 0]
             if self._similar_state(buffer_a.state[nearest_item], state):
                 buffer_a.lru[nearest_item] = self.time
                 return buffer_a.q_return[nearest_item]
@@ -103,12 +103,12 @@ class QECTable(object):
                 buffer_a.lru[index] = self.time
             return value / self.knn
         else:
-            smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=False)
+            smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=False)[0]
             value = 0.0
             for i in smallest:
                 value += buffer_a.q_return[i]
                 #  if this node does not change after last annoy
-                if float(buffer_a.lru[i]) < buffer_a.last_tree_built_time:
+                if buffer_a.lru[i] <= buffer_a.last_tree_built_time:
                     buffer_a.lru[i] = self.time
             return value / self.knn
 
@@ -143,7 +143,7 @@ class QECTable(object):
                     buffer_a.lru[i] = self.time
                     return
         else:
-            nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0]
+            nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0, 0]
             if self._similar_state(buffer_a.state[nearest_item], state):
                 buffer_a.q_return[nearest_item] = np.maximum(buffer_a.q_return[nearest_item], r)
                 buffer_a.lru[nearest_item] = self.time
