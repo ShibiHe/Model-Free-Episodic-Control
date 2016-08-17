@@ -682,8 +682,6 @@ class EC_DQN(object):
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
             evaluation[i] = self.qec_table.estimate(state, actions[i])
-            if np.random.randint(1, 1000) == 1:
-                print evaluation[i]
 
         return self.network.train(imgs, actions, rewards, terminals, evaluation)
 
@@ -972,22 +970,21 @@ class NeuralNetworkEpisodicMemory1(object):
         an action based on the current policy.
         """
 
-        data_set.add_sample(self.last_img, self.last_action,
-                            self.qec_table.estimate(self.last_img, self.last_action), False)
+        data_set.add_sample(self.last_img, self.last_action, reward, False)
         if self.step_counter >= self.phi_length:
             phi = data_set.phi(cur_img)
 
-            if len(self.data_set) < self.KNN_decision:
-                if self.rng.rand() < epsilon:
-                    return self.rng.randint(0, self.num_actions)
-                value = -100
-                maximum_action = 0
-                for action in range(self.num_actions):
-                    value_t = self.qec_table.estimate(cur_img, action)
-                    if value_t > value:
-                        value = value_t
-                        maximum_action = action
-                return maximum_action
+            # if len(self.data_set) < self.KNN_decision:
+            #     if self.rng.rand() < epsilon:
+            #         return self.rng.randint(0, self.num_actions)
+            #     value = -100
+            #     maximum_action = 0
+            #     for action in range(self.num_actions):
+            #         value_t = self.qec_table.estimate(cur_img, action)
+            #         if value_t > value:
+            #             value = value_t
+            #             maximum_action = action
+            #     return maximum_action
 
             action = self.network.choose_action(phi, epsilon)
         else:
@@ -1006,8 +1003,7 @@ class NeuralNetworkEpisodicMemory1(object):
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
             evaluation[i] = self.qec_table.estimate(state, actions[i])
-            if np.random.randint(1, 1000) == 1:
-                print rewards[i], evaluation[i]
+            print rewards[i], evaluation[i]
             evaluation[i] = np.maximum(rewards[i], evaluation[i])
 
         return self.network.train(imgs, actions, rewards, terminals, evaluation)

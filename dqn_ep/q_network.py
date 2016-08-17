@@ -29,7 +29,7 @@ class DeepQLearner:
                  num_frames, discount, learning_rate, rho,
                  rms_epsilon, momentum, clip_delta, freeze_interval,
                  batch_size, network_type, update_rule,
-                 batch_accumulator, rng, input_scale=255.0, use_ec=False, use_episodic_mem=False):
+                 batch_accumulator, rng, input_scale=255.0, use_ec=False, use_episodic_mem=False, double=False):
 
         self.input_width = input_width
         self.input_height = input_height
@@ -105,9 +105,15 @@ class DeepQLearner:
         terminalsX = terminals.astype(theano.config.floatX)
         actionmask = T.eq(T.arange(num_actions).reshape((1, -1)),
                           actions.reshape((-1, 1))).astype(theano.config.floatX)
-        target = (rewards +
-                  (T.ones_like(terminalsX) - terminalsX) *
-                  self.discount * T.max(next_q_vals, axis=1, keepdims=True))
+        if not double:
+            target = (rewards + (T.ones_like(terminalsX) - terminalsX) *
+                      self.discount * T.max(next_q_vals, axis=1, keepdims=True))
+        else:
+            next_actions = T.argmax(next_q_vals, axis=1)  # batch*1
+            next_actionmask = T.eq(T.arange(num_actions).reshape((1, -1)),
+                                   next_actions.reshape((-1, 1))).astype(theano.config.floatX)
+            target = rewards + (T.ones_like(terminalsX) - terminalsX) * self.discount * \
+                               (next_q_vals * next_actionmask).sum(axis=1).reshape((-1, 1))
 
         if use_ec:
             target = T.maximum(target, evaluation)

@@ -41,7 +41,7 @@ class Defaults:
                  # rho/RMS_DECAY to track both the history of the gradient
                  # and the squared gradient.
     CLIP_DELTA = 1.0
-    EPSILON_START = 0.1
+    EPSILON_START = 1.0
     EPSILON_MIN = .005
     EPSILON_DECAY = 100000
     PHI_LENGTH = 4
@@ -62,8 +62,8 @@ class Defaults:
     METHOD = 'dqn_episodic_memory1'
     K_NEAREST_NEIGHBOR = 5
     EC_DISCOUNT = 1.0
-    BUFFER_SIZE = 1000
-    REBUILD_KNN_FREQUENCY = 500
+    BUFFER_SIZE = 10000
+    REBUILD_KNN_FREQUENCY = 1000
     DIMENSION_OF_STATE = 64
     PROJECTION_TYPE = 'random'  # or VAE
     TESTING = False
