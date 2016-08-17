@@ -703,8 +703,29 @@ class EC_DQN(object):
 
         # TESTING---------------------------
         if self.testing:
-            action = self._choose_action(self.test_data_set, .05,
-                                         observation, np.clip(reward, -1, 1))
+            self.test_data_set.add_sample(self.last_img, self.last_action, np.clip(reward, -1, 1), False)
+            if self.step_counter >= self.phi_length:
+                phi = self.test_data_set.phi(observation)
+                q_values = self.network.q_vals(phi)
+                action1 = np.argmax(q_values)
+                return1 = q_values[action1]
+            else:
+                action1 = 0
+                return1 = -1
+
+            action2 = 0
+            return2 = 0
+            for a in range(self.num_actions):
+                return_a = self.qec_table.estimate(observation, a)
+                if return_a > return2:
+                    return2 = return_a
+                    action2 = a
+            print action1, return1, action2, return2
+            raw_input()
+            if return2 > return1*1.5:
+                action = action2
+            else:
+                action = action1
 
         # NOT TESTING---------------------------
         else:
@@ -1026,7 +1047,7 @@ class NeuralNetworkEpisodicMemory1(object):
 
         # TESTING---------------------------
         if self.testing:
-            action = self._choose_action(self.test_data_set, .05,
+            action = self._choose_action(self.test_data_set, 0.0,
                                          observation, np.clip(reward, -1, 1))
 
         # NOT TESTING---------------------------
