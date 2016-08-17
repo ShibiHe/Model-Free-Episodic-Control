@@ -45,6 +45,9 @@ def process_args(args, defaults, description):
     parser.add_argument('--display-screen', dest="display_screen",
                         action='store_true', default=False,
                         help='Show the game screen.')
+    parser.add_argument('--double-dqn', dest="double_dqn",
+                        action='store_true', default=False,
+                        help='enable double DQN')
     parser.add_argument('--experiment-prefix', dest="experiment_prefix",
                         default=None,
                         help='Experiment name prefix '
@@ -255,7 +258,7 @@ def launch(args, defaults, description):
                                              parameters.network_type,
                                              parameters.update_rule,
                                              parameters.batch_accumulator,
-                                             rng, use_ec=True)
+                                             rng, use_ec=True, double=parameters.double_dqn)
         else:
             handle = open(parameters.nn_file, 'r')
             network = cPickle.load(handle)
@@ -304,7 +307,7 @@ def launch(args, defaults, description):
                                              parameters.network_type,
                                              parameters.update_rule,
                                              parameters.batch_accumulator,
-                                             rng, use_episodic_mem=True)
+                                             rng, use_episodic_mem=True, double=parameters.double_dqn)
         else:
             handle = open(parameters.nn_file, 'r')
             network = cPickle.load(handle)
@@ -353,7 +356,7 @@ def launch(args, defaults, description):
                                              parameters.network_type,
                                              parameters.update_rule,
                                              parameters.batch_accumulator,
-                                             rng)
+                                             rng, double=parameters.double_dqn)
         else:
             handle = open(parameters.nn_file, 'r')
             network = cPickle.load(handle)
