@@ -682,6 +682,8 @@ class EC_DQN(object):
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
             evaluation[i] = self.qec_table.estimate(state, actions[i])
+            if np.random.randint(1, 1000) == 1:
+                print evaluation[i]
 
         return self.network.train(imgs, actions, rewards, terminals, evaluation)
 
