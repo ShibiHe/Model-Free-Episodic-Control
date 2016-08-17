@@ -826,7 +826,7 @@ class EC_DQN(object):
 class NeuralNetworkEpisodicMemory1(object):
     def __init__(self, q_network, qec_table, epsilon_start, epsilon_min,
                  epsilon_decay, replay_memory_size, exp_pref,
-                 replay_start_size, update_frequency, ec_discount, num_actions, ec_testing, rng, KNN_decision=500000):
+                 replay_start_size, update_frequency, ec_discount, num_actions, ec_testing, rng, KNN_decision=50000):
         self.network = q_network
         self.qec_table = qec_table
         self.ec_testing = ec_testing
@@ -1004,7 +1004,8 @@ class NeuralNetworkEpisodicMemory1(object):
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
             evaluation[i] = self.qec_table.estimate(state, actions[i])
-            print rewards[i], evaluation[i]
+            if np.random.randint(1, 1000) == 1:
+                print rewards[i], evaluation[i]
             evaluation[i] = np.maximum(rewards[i], evaluation[i])
 
         return self.network.train(imgs, actions, rewards, terminals, evaluation)
