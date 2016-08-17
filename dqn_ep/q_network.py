@@ -29,7 +29,7 @@ class DeepQLearner:
                  num_frames, discount, learning_rate, rho,
                  rms_epsilon, momentum, clip_delta, freeze_interval,
                  batch_size, network_type, update_rule,
-                 batch_accumulator, rng, input_scale=255.0, use_ec=False):
+                 batch_accumulator, rng, input_scale=255.0, use_ec=False, use_episodic_mem=False):
 
         self.input_width = input_width
         self.input_height = input_height
@@ -111,6 +111,8 @@ class DeepQLearner:
 
         if use_ec:
             target = T.maximum(target, evaluation)
+        if use_episodic_mem:
+            target = evaluation
 
         output = (q_vals * actionmask).sum(axis=1).reshape((-1, 1))
         diff = target - output

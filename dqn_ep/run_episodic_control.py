@@ -60,8 +60,7 @@ class Defaults:
     DETERMINISTIC = True
     CUDNN_DETERMINISTIC = False
 
-    DQN = False
-    EPISODIC_CONTROL = True
+    METHOD = 'episodic_control'
     K_NEAREST_NEIGHBOR = 11
     EC_DISCOUNT = 1.0
     BUFFER_SIZE = 1000000

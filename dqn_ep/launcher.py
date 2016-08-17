@@ -144,12 +144,9 @@ def process_args(args, defaults, description):
                               '(default: %(default)s)'))
 
     # for episodic control
-    parser.add_argument('--use-ec', dest='use_episodic_control',
-                        type=bool, default=defaults.EPISODIC_CONTROL,
-                        help='use episodic control')
-    parser.add_argument('--use-dqn', dest='use_dqn',
-                        type=bool, default=defaults.DQN,
-                        help='use dqn')
+    parser.add_argument('--method', dest="method",
+                        type=str, default=defaults.METHOD,
+                        help='choose different learning algorithms')
     parser.add_argument('--knn', dest='knn',
                         type=int, default=defaults.K_NEAREST_NEIGHBOR,
                         help='k nearest neighbor')
@@ -241,7 +238,7 @@ def launch(args, defaults, description):
 
     agent = None
 
-    if parameters.use_dqn and parameters.use_episodic_control:
+    if parameters.method == 'ec_dqn':
         if parameters.nn_file is None:
             network = q_network.DeepQLearner(defaults.RESIZED_WIDTH,
                                              defaults.RESIZED_HEIGHT,
@@ -290,7 +287,56 @@ def launch(args, defaults, description):
                                   parameters.ec_testing,
                                   rng)
 
-    elif parameters.use_dqn:
+    if parameters.method == 'dqn_episodic_memory1':
+        if parameters.nn_file is None:
+            network = q_network.DeepQLearner(defaults.RESIZED_WIDTH,
+                                             defaults.RESIZED_HEIGHT,
+                                             num_actions,
+                                             parameters.phi_length,
+                                             parameters.discount,
+                                             parameters.learning_rate,
+                                             parameters.rms_decay,
+                                             parameters.rms_epsilon,
+                                             parameters.momentum,
+                                             parameters.clip_delta,
+                                             parameters.freeze_interval,
+                                             parameters.batch_size,
+                                             parameters.network_type,
+                                             parameters.update_rule,
+                                             parameters.batch_accumulator,
+                                             rng, use_ec=True)
+        else:
+            handle = open(parameters.nn_file, 'r')
+            network = cPickle.load(handle)
+
+        if parameters.qec_table is None:
+            qec_table = EC_functions.QECTable(parameters.knn,
+                                              parameters.state_dimension,
+                                              parameters.projection_type,
+                                              defaults.RESIZED_WIDTH*defaults.RESIZED_HEIGHT,
+                                              parameters.buffer_size,
+                                              num_actions,
+                                              rng,
+                                              parameters.rebuild_knn_frequency)
+        else:
+            handle = open(parameters.qec_table, 'r')
+            qec_table = cPickle.load(handle)
+
+        agent = ale_agents.NeuralNetworkEpisodicMemory1(network,
+                                                        qec_table,
+                                                        parameters.epsilon_start,
+                                                        parameters.epsilon_min,
+                                                        parameters.epsilon_decay,
+                                                        parameters.replay_memory_size,
+                                                        parameters.experiment_prefix,
+                                                        parameters.replay_start_size,
+                                                        parameters.update_frequency,
+                                                        parameters.ec_discount,
+                                                        num_actions,
+                                                        parameters.ec_testing,
+                                                        rng)
+
+    if parameters.method == 'dqn':
         if parameters.nn_file is None:
             network = q_network.DeepQLearner(defaults.RESIZED_WIDTH,
                                              defaults.RESIZED_HEIGHT,
@@ -321,8 +367,8 @@ def launch(args, defaults, description):
                                        parameters.replay_start_size,
                                        parameters.update_frequency,
                                        rng)
-    else:
-        if parameters.use_episodic_control:
+
+    if parameters.method == 'episodic_control':
             if parameters.qec_table is None:
                 qec_table = EC_functions.QECTable(parameters.knn,
                                                   parameters.state_dimension,
