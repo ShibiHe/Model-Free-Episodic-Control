@@ -9,9 +9,6 @@ dqn_ep/test2.py
 
 *.pkl
 
-dqn_ep/run_ECDQN.py
-dqn_ep/run_EC_DQN.py
-
 *.ann
 
 dqn_ep/test3.py
