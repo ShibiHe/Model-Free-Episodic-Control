@@ -826,7 +826,7 @@ class EC_DQN(object):
 class NeuralNetworkEpisodicMemory1(object):
     def __init__(self, q_network, qec_table, epsilon_start, epsilon_min,
                  epsilon_decay, replay_memory_size, exp_pref,
-                 replay_start_size, update_frequency, ec_discount, num_actions, ec_testing, rng, KNN_decision=50000):
+                 replay_start_size, update_frequency, ec_discount, num_actions, ec_testing, rng):
         self.network = q_network
         self.qec_table = qec_table
         self.ec_testing = ec_testing
@@ -841,7 +841,6 @@ class NeuralNetworkEpisodicMemory1(object):
         self.replay_start_size = replay_start_size
         self.update_frequency = update_frequency
         self.rng = rng
-        self.KNN_decision = KNN_decision
 
         self.phi_length = self.network.num_frames
         self.image_width = self.network.input_width
@@ -973,19 +972,6 @@ class NeuralNetworkEpisodicMemory1(object):
         data_set.add_sample(self.last_img, self.last_action, reward, False)
         if self.step_counter >= self.phi_length:
             phi = data_set.phi(cur_img)
-
-            # if len(self.data_set) < self.KNN_decision:
-            #     if self.rng.rand() < epsilon:
-            #         return self.rng.randint(0, self.num_actions)
-            #     value = -100
-            #     maximum_action = 0
-            #     for action in range(self.num_actions):
-            #         value_t = self.qec_table.estimate(cur_img, action)
-            #         if value_t > value:
-            #             value = value_t
-            #             maximum_action = action
-            #     return maximum_action
-
             action = self.network.choose_action(phi, epsilon)
         else:
             action = self.rng.randint(0, self.num_actions)
@@ -999,14 +985,12 @@ class NeuralNetworkEpisodicMemory1(object):
         differently.
         """
         imgs, actions, rewards, terminals = self.data_set.random_batch(self.network.batch_size)
-        evaluation = np.zeros((self.network.batch_size, 1), np.float32)
-        for i in range(self.network.batch_size):
-            state = imgs[i][self.data_set.phi_length-1]
-            evaluation[i] = self.qec_table.estimate(state, actions[i])
-            print rewards[i], evaluation[i]
-            evaluation[i] = np.maximum(rewards[i], evaluation[i])
+        # evaluation = np.zeros((self.network.batch_size, 1), np.float32)
+        # for i in range(self.network.batch_size):
+        #     state = imgs[i][self.data_set.phi_length-1]
+        #     evaluation[i] = self.qec_table.estimate(state, actions[i])
 
-        return self.network.train(imgs, actions, rewards, terminals, evaluation)
+        return self.network.train(imgs, actions, rewards, terminals, rewards)
 
     def step(self, reward, observation):
         """
@@ -1092,6 +1076,7 @@ class NeuralNetworkEpisodicMemory1(object):
                 #     self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
                 #     last_q_return = q_return
                 self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
+                self.data_set.rewards[index] = q_return
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
