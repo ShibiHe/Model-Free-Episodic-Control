@@ -50,7 +50,7 @@ class Defaults:
     BATCH_SIZE = 32
     NETWORK_TYPE = "nature_dnn"
     FREEZE_INTERVAL = 10000
-    REPLAY_START_SIZE = 50000
+    REPLAY_START_SIZE = 2000
     RESIZE_METHOD = 'scale'
     RESIZED_WIDTH = 84
     RESIZED_HEIGHT = 84
@@ -62,8 +62,8 @@ class Defaults:
     METHOD = 'dqn_episodic_memory1'
     K_NEAREST_NEIGHBOR = 5
     EC_DISCOUNT = 1.0
-    BUFFER_SIZE = 5000
-    REBUILD_KNN_FREQUENCY = 1000
+    BUFFER_SIZE = 1000
+    REBUILD_KNN_FREQUENCY = 500
     DIMENSION_OF_STATE = 64
     PROJECTION_TYPE = 'random'  # or VAE
     TESTING = False

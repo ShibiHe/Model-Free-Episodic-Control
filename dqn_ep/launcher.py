@@ -304,7 +304,7 @@ def launch(args, defaults, description):
                                              parameters.network_type,
                                              parameters.update_rule,
                                              parameters.batch_accumulator,
-                                             rng, use_ec=True)
+                                             rng, use_episodic_mem=True)
         else:
             handle = open(parameters.nn_file, 'r')
             network = cPickle.load(handle)

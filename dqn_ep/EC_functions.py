@@ -22,7 +22,7 @@ class Buffer(object):
         self.last_tree_built_time = None
         self.insert_times = 0
         self.update_frequency = frequency
-        self.mini_frequency = 8000
+        self.mini_frequency = 1000
 
     def update_tree(self, time):
         print 'rebuild tree'
