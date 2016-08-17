@@ -50,7 +50,7 @@ class Defaults:
     BATCH_SIZE = 32
     NETWORK_TYPE = "nature_dnn"
     FREEZE_INTERVAL = 10000
-    REPLAY_START_SIZE = 2000
+    REPLAY_START_SIZE = 50000
     RESIZE_METHOD = 'scale'
     RESIZED_WIDTH = 84
     RESIZED_HEIGHT = 84
