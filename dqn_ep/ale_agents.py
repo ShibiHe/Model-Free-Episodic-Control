@@ -950,6 +950,7 @@ class NeuralNetworkEpisodicMemory1(object):
         self.step_counter = 0
         self.batch_counter = 0
         self.episode_reward = 0
+        self.training_times = 0
 
         # We report the mean loss for every epoch.
         self.loss_averages = []
@@ -1024,9 +1025,10 @@ class NeuralNetworkEpisodicMemory1(object):
                                              np.clip(reward, -1, 1))
 
                 if self.step_counter % self.update_frequency == 0:
-                    loss = self._do_training()
-                    self.batch_counter += 1
-                    self.loss_averages.append(loss)
+                    self.training_times += 1
+                    # loss = self._do_training()
+                    # self.batch_counter += 1
+                    # self.loss_averages.append(loss)
 
             else:  # Still gathering initial random data...
                 action = self._choose_action(self.data_set, self.epsilon,
@@ -1075,11 +1077,16 @@ class NeuralNetworkEpisodicMemory1(object):
                 # if not np.isclose(q_return, last_q_return):
                 #     self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
                 #     last_q_return = q_return
-                self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
+                # self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
                 self.data_set.rewards[index] = q_return
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
+            
+            for i in range(self.training_times):
+                loss = self._do_training()
+                self.batch_counter += 1
+                self.loss_averages.append(loss)
 
             rho = 0.98
             self.steps_sec_ema *= rho
