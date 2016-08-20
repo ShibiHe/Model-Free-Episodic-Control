@@ -39,6 +39,7 @@ actions, and rewards.
         self.imgs = np.zeros((max_steps, height, width), dtype='uint8')
         self.actions = np.zeros(max_steps, dtype='int32')
         self.rewards = np.zeros(max_steps, dtype=floatX)
+        self.return_value = np.zeros(max_steps, dtype=floatX)
         self.terminal = np.zeros(max_steps, dtype='bool')
 
         self.bottom = 0
@@ -91,7 +92,7 @@ actions, and rewards.
         phi[-1] = img
         return phi
 
-    def random_batch(self, batch_size):
+    def random_batch(self, batch_size, get_return_value=False):
         """Return corresponding imgs, actions, rewards, and terminal status for
 batch_size randomly chosen state transitions.
 
@@ -105,6 +106,7 @@ batch_size randomly chosen state transitions.
         actions = np.zeros((batch_size, 1), dtype='int32')
         rewards = np.zeros((batch_size, 1), dtype=floatX)
         terminal = np.zeros((batch_size, 1), dtype='bool')
+        return_value = np.zeros((batch_size, 1), dtype=floatX)
 
         count = 0
         while count < batch_size:
@@ -133,8 +135,11 @@ batch_size randomly chosen state transitions.
             actions[count] = self.actions.take(end_index, mode='wrap')
             rewards[count] = self.rewards.take(end_index, mode='wrap')
             terminal[count] = self.terminal.take(end_index, mode='wrap')
+            return_value[count] = self.return_value.take(end_index, mode='wrap')
             count += 1
 
+        if get_return_value:
+            return imgs, actions, rewards, terminal, return_value
         return imgs, actions, rewards, terminal
 
 

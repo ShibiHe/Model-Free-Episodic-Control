@@ -677,11 +677,12 @@ class EC_DQN(object):
         May be overridden if a subclass needs to train the network
         differently.
         """
-        imgs, actions, rewards, terminals = self.data_set.random_batch(self.network.batch_size)
+        imgs, actions, rewards, terminals, return_value = self.data_set.random_batch(self.network.batch_size, True)
         evaluation = np.zeros((self.network.batch_size, 1), np.float32)
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
             evaluation[i] = self.qec_table.estimate(state, actions[i])
+            evaluation[i] = np.maximum(evaluation[i], return_value[i])
 
         return self.network.train(imgs, actions, rewards, terminals, evaluation)
 
@@ -769,6 +770,7 @@ class EC_DQN(object):
                 #     self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
                 #     last_q_return = q_return
                 self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
+                self.data_set.return_value[index] = q_return
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
@@ -1082,7 +1084,7 @@ class NeuralNetworkEpisodicMemory1(object):
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
-            
+
             for i in range(self.training_times):
                 loss = self._do_training()
                 self.batch_counter += 1
