@@ -112,16 +112,16 @@ class DeepQLearner:
             next_actions = T.argmax(next_q_vals, axis=1)  # batch*1
             next_actionmask = T.eq(T.arange(num_actions).reshape((1, -1)),
                                    next_actions.reshape((-1, 1))).astype(theano.config.floatX)
-            target = rewards + (T.ones_like(terminalsX) - terminalsX) * self.discount * \
-                               (next_q_vals * next_actionmask).sum(axis=1).reshape((-1, 1))
+            target2 = target = rewards + (T.ones_like(terminalsX) - terminalsX) * self.discount * \
+                                         (next_q_vals * next_actionmask).sum(axis=1).reshape((-1, 1))
 
         if use_ec:
-            target = T.maximum(target, evaluation)
+            target2 = T.maximum(target, evaluation)
         if use_episodic_mem:
-            target = evaluation
+            target2 = evaluation
 
         output = (q_vals * actionmask).sum(axis=1).reshape((-1, 1))
-        diff = target - output
+        diff = target2 - output
 
         if self.clip_delta > 0:
             # If we simply take the squared clipped diff as our loss,
@@ -170,7 +170,7 @@ class DeepQLearner:
             updates = lasagne.updates.apply_momentum(updates, None,
                                                      self.momentum)
 
-        self._train = theano.function([], [loss], updates=updates,
+        self._train = theano.function([], [loss, target], updates=updates,
                                       givens=train_givens, on_unused_input='warn')
         q_givens = {
             states: self.state_shared.reshape((1,
@@ -195,7 +195,7 @@ class DeepQLearner:
         else:
             raise ValueError("Unrecognized network: {}".format(network_type))
 
-    def train(self, imgs, actions, rewards, terminals, evaluation=None):
+    def train(self, imgs, actions, rewards, terminals, evaluation=None, get_target=False):
         """
         Train one batch.
 
@@ -218,8 +218,10 @@ class DeepQLearner:
             self.evaluation_shared.set_value(evaluation)
         if self.freeze_interval > 0 and self.update_counter % self.freeze_interval == 0:
             self.reset_q_hat()
-        loss = self._train()
+        loss, target = self._train()
         self.update_counter += 1
+        if get_target:
+            return np.sqrt(loss), target
         return np.sqrt(loss)
 
     def q_vals(self, state):

@@ -338,6 +338,54 @@ def launch(args, defaults, description):
                                                         num_actions,
                                                         parameters.ec_testing,
                                                         rng)
+    if parameters.method == 'dqn_episodic_memory2':
+        if parameters.nn_file is None:
+            network = q_network.DeepQLearner(defaults.RESIZED_WIDTH,
+                                             defaults.RESIZED_HEIGHT,
+                                             num_actions,
+                                             parameters.phi_length,
+                                             parameters.discount,
+                                             parameters.learning_rate,
+                                             parameters.rms_decay,
+                                             parameters.rms_epsilon,
+                                             parameters.momentum,
+                                             parameters.clip_delta,
+                                             parameters.freeze_interval,
+                                             parameters.batch_size,
+                                             parameters.network_type,
+                                             parameters.update_rule,
+                                             parameters.batch_accumulator,
+                                             rng, use_episodic_mem=True, double=parameters.double_dqn)
+        else:
+            handle = open(parameters.nn_file, 'r')
+            network = cPickle.load(handle)
+
+        if parameters.qec_table is None:
+            qec_table = EC_functions.QECTable(parameters.knn,
+                                              parameters.state_dimension,
+                                              parameters.projection_type,
+                                              defaults.RESIZED_WIDTH*defaults.RESIZED_HEIGHT,
+                                              parameters.buffer_size,
+                                              num_actions,
+                                              rng,
+                                              parameters.rebuild_knn_frequency)
+        else:
+            handle = open(parameters.qec_table, 'r')
+            qec_table = cPickle.load(handle)
+
+        agent = ale_agents.NeuralNetworkEpisodicMemory2(network,
+                                                        qec_table,
+                                                        parameters.epsilon_start,
+                                                        parameters.epsilon_min,
+                                                        parameters.epsilon_decay,
+                                                        parameters.replay_memory_size,
+                                                        parameters.experiment_prefix,
+                                                        parameters.replay_start_size,
+                                                        parameters.update_frequency,
+                                                        parameters.ec_discount,
+                                                        num_actions,
+                                                        parameters.ec_testing,
+                                                        rng)
 
     if parameters.method == 'dqn':
         if parameters.nn_file is None:

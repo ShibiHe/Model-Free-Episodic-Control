@@ -65,13 +65,16 @@ class QECTable(object):
             raise ValueError('unrecognized projection type')
 
     """estimate the value of Q_EC(s,a)  O(N*logK*D)  check existence: O(N) -> KNN: O(D*N*logK)"""
-    def estimate(self, s, a):
+    def estimate(self, s, a, verbose=False):
         if type(a) == np.ndarray:
             a = a[0]
         state = np.dot(self.matrix_projection, s.flatten())
         self.time += 0.001
 
         buffer_a = self.ec_buffer[a]
+
+        knn_state_list = []
+        knn_return_list = []
 
         #  first check if we already have this state
 
@@ -80,11 +83,15 @@ class QECTable(object):
             for i in xrange(buffer_a.items):
                 if self._similar_state(buffer_a.state[i], state):
                     buffer_a.lru[i] = self.time
+                    if verbose:
+                        return buffer_a.q_return[i], [0]*self.knn, [0]*self.knn
                     return buffer_a.q_return[i]
         else:
             nearest_item = buffer_a.tree.query(state.reshape((1, -1)), return_distance=False)[0, 0]
             if self._similar_state(buffer_a.state[nearest_item], state):
                 buffer_a.lru[nearest_item] = self.time
+                if verbose:
+                    return buffer_a.q_return[nearest_item], [0]*self.knn, [0]*self.knn
                 return buffer_a.q_return[nearest_item]
 
         #  second KNN to evaluate the novel state
@@ -101,6 +108,11 @@ class QECTable(object):
                 index = d_node.index
                 value += buffer_a.q_return[index]
                 buffer_a.lru[index] = self.time
+                if verbose:
+                    knn_state_list.append(buffer_a.state[index])
+                    knn_return_list.append(buffer_a.q_return[index])
+            if verbose:
+                return value / self.knn, knn_state_list, knn_return_list
             return value / self.knn
         else:
             smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=False)[0]
@@ -110,6 +122,11 @@ class QECTable(object):
                 #  if this node does not change after last annoy
                 if buffer_a.lru[i] <= buffer_a.last_tree_built_time:
                     buffer_a.lru[i] = self.time
+                if verbose:
+                    knn_state_list.append(buffer_a.state[i])
+                    knn_return_list.append(buffer_a.q_return[i])
+            if verbose:
+                return value / self.knn, knn_state_list, knn_return_list
             return value / self.knn
 
     @staticmethod
