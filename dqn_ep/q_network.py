@@ -117,10 +117,10 @@ class DeepQLearner:
         target2 = target
 
         if use_ec:
-            # target2 = T.maximum(target, evaluation)
-            mask1 = T.eq(evaluation, 0.0)
-            mask2 = T.invert(mask1)
-            target2 = target*mask1 + evaluation*mask2
+            target2 = T.maximum(target, evaluation)
+            # mask1 = T.eq(evaluation, 0.0)
+            # mask2 = T.invert(mask1)
+            # target2 = target*mask1 + evaluation*mask2
         if use_episodic_mem:
             target2 = evaluation
 

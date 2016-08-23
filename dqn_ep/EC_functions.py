@@ -110,9 +110,8 @@ class QECTable(object):
                 index = d_node.index
                 value += buffer_a.q_return[index]
                 buffer_a.lru[index] = self.time
-                if verbose:
-                    knn_distance_list.append(d_node.distance)
-                    knn_return_list.append(buffer_a.q_return[index])
+                knn_distance_list.append(d_node.distance)
+                knn_return_list.append(buffer_a.q_return[index])
             if verbose:
                 return value / (0.0001 + len(knn_distance_list)), knn_distance_list, knn_return_list
             return value / (0.0001 + len(knn_distance_list))
@@ -129,9 +128,8 @@ class QECTable(object):
                 #  if this node does not change after last annoy
                 if buffer_a.lru[i] <= buffer_a.last_tree_built_time:
                     buffer_a.lru[i] = self.time
-                if verbose:
-                    knn_distance_list.append(dist[pos])
-                    knn_return_list.append(buffer_a.q_return[i])
+                knn_distance_list.append(dist[pos])
+                knn_return_list.append(buffer_a.q_return[i])
             if verbose:
                 return value / (0.0001 + len(knn_distance_list)), knn_distance_list, knn_return_list
             return value / (0.0001 + len(knn_distance_list))

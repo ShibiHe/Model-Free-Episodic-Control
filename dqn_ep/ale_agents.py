@@ -707,11 +707,11 @@ class EC_DQN(object):
             return_table_list.append(return_table)
             knn_distance_list_list.append(knn_distance_list)
             knn_return_list_list.append(knn_return_list)
-            # evaluation[i] = np.maximum(return_table, return_value[i])
-            if len(knn_distance_list) == 0 or return_table < 1.0:
-                evaluation[i] = 0.0
-            else:
-                evaluation[i] = return_table
+            evaluation[i] = np.maximum(return_table, return_value[i])
+            # if len(knn_distance_list) == 0 or return_table < 1.0:
+            #     evaluation[i] = 0.0
+            # else:
+            #     evaluation[i] = return_table
 
         loss, target = self.network.train(imgs, actions, rewards, terminals, evaluation=evaluation, get_target=True)
         for i in range(self.network.batch_size):
