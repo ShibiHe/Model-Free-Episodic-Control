@@ -112,14 +112,16 @@ class DeepQLearner:
             next_actions = T.argmax(next_q_vals, axis=1)  # batch*1
             next_actionmask = T.eq(T.arange(num_actions).reshape((1, -1)),
                                    next_actions.reshape((-1, 1))).astype(theano.config.floatX)
-            target2 = target = rewards + (T.ones_like(terminalsX) - terminalsX) * self.discount * \
-                                         (next_q_vals * next_actionmask).sum(axis=1).reshape((-1, 1))
+            target = rewards + (T.ones_like(terminalsX) - terminalsX) * self.discount * \
+                               (next_q_vals * next_actionmask).sum(axis=1).reshape((-1, 1))
+        target2 = target
 
         if use_ec:
+            pass
             # target2 = T.maximum(target, evaluation)
-            mask1 = T.eq(evaluation, -1.0)
-            mask2 = T.invert(mask1)
-            target2 = target*mask1 + evaluation*mask2
+            # mask1 = T.eq(evaluation, -1.0)
+            # mask2 = T.invert(mask1)
+            # target2 = target*mask1 + evaluation*mask2
         if use_episodic_mem:
             target2 = evaluation
 
