@@ -708,7 +708,7 @@ class EC_DQN(object):
             knn_distance_list_list.append(knn_distance_list)
             knn_return_list_list.append(knn_return_list)
             # evaluation[i] = np.maximum(return_table, return_value[i])
-            if len(knn_distance_list) == 0:
+            if len(knn_distance_list) == 0 or return_table < 1.0:
                 evaluation[i] = -1.0
             else:
                 evaluation[i] = return_table
