@@ -107,7 +107,7 @@ class DeepQLearner:
                           actions.reshape((-1, 1))).astype(theano.config.floatX)
         if not double:
             target = (rewards + (T.ones_like(terminalsX) - terminalsX) *
-                      self.discount * T.max(next_q_vals, axis=1, keepdims=True))
+                      self.discount * T.maximum(T.max(next_q_vals, axis=1, keepdims=True), 0.0))
         else:
             next_actions = T.argmax(next_q_vals, axis=1)  # batch*1
             next_actionmask = T.eq(T.arange(num_actions).reshape((1, -1)),
@@ -117,7 +117,6 @@ class DeepQLearner:
         target2 = target
 
         if use_ec:
-            pass
             # target2 = T.maximum(target, evaluation)
             mask1 = T.eq(evaluation, 0.0)
             mask2 = T.invert(mask1)
