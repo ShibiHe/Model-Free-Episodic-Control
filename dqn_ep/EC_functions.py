@@ -114,8 +114,8 @@ class QECTable(object):
                     knn_distance_list.append(d_node.distance)
                     knn_return_list.append(buffer_a.q_return[index])
             if verbose:
-                return value / self.knn, knn_distance_list, knn_return_list
-            return value / self.knn
+                return value / (0.0001 + len(knn_distance_list)), knn_distance_list, knn_return_list
+            return value / (0.0001 + len(knn_distance_list))
         else:
             dist, smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=True)
             dist = dist[0]
@@ -133,8 +133,8 @@ class QECTable(object):
                     knn_distance_list.append(dist[pos])
                     knn_return_list.append(buffer_a.q_return[i])
             if verbose:
-                return value / self.knn, knn_distance_list, knn_return_list
-            return value / self.knn
+                return value / (0.0001 + len(knn_distance_list)), knn_distance_list, knn_return_list
+            return value / (0.0001 + len(knn_distance_list))
 
     @staticmethod
     def _calc_distance(a, b):
