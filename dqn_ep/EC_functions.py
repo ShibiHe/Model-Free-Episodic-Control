@@ -115,7 +115,9 @@ class QECTable(object):
                 return value / self.knn, knn_distance_list, knn_return_list
             return value / self.knn
         else:
-            dist, smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=True)[0]
+            dist, smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=True)
+            knn_distance_list = dist[0]
+            smallest = smallest[0]
             value = 0.0
             for i in smallest:
                 value += buffer_a.q_return[i]
@@ -124,7 +126,6 @@ class QECTable(object):
                     buffer_a.lru[i] = self.time
                 if verbose:
                     knn_return_list.append(buffer_a.q_return[i])
-            knn_distance_list = [x for x in dist]
             if verbose:
                 return value / self.knn, knn_distance_list, knn_return_list
             return value / self.knn
