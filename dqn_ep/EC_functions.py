@@ -95,7 +95,7 @@ class QECTable(object):
                 return buffer_a.q_return[nearest_item]
 
         #  second KNN to evaluate the novel state
-
+        threshold = 300.0
         if buffer_a.tree is None:
             # there is no approximate tree now
             distance_list = []
@@ -105,6 +105,8 @@ class QECTable(object):
             smallest = heapq.nsmallest(self.knn, distance_list, key=lambda x: x.distance)
             value = 0.0
             for d_node in smallest:
+                if d_node.distance > threshold:
+                    break
                 index = d_node.index
                 value += buffer_a.q_return[index]
                 buffer_a.lru[index] = self.time
@@ -116,15 +118,19 @@ class QECTable(object):
             return value / self.knn
         else:
             dist, smallest = buffer_a.tree.query(state.reshape((1, -1)), k=self.knn, return_distance=True)
-            knn_distance_list = dist[0]
+            dist = dist[0]
             smallest = smallest[0]
             value = 0.0
-            for i in smallest:
+            for pos in range(self.knn):
+                if dist[pos] > threshold:
+                    break
+                i = smallest[pos]
                 value += buffer_a.q_return[i]
                 #  if this node does not change after last annoy
                 if buffer_a.lru[i] <= buffer_a.last_tree_built_time:
                     buffer_a.lru[i] = self.time
                 if verbose:
+                    knn_distance_list.append(dist[pos])
                     knn_return_list.append(buffer_a.q_return[i])
             if verbose:
                 return value / self.knn, knn_distance_list, knn_return_list

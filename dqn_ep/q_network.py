@@ -116,7 +116,10 @@ class DeepQLearner:
                                          (next_q_vals * next_actionmask).sum(axis=1).reshape((-1, 1))
 
         if use_ec:
-            target2 = T.maximum(target, evaluation)
+            # target2 = T.maximum(target, evaluation)
+            mask1 = T.eq(evaluation, -1.0)
+            mask2 = ~mask1
+            target2 = target*mask1 + evaluation*mask2
         if use_episodic_mem:
             target2 = evaluation
 

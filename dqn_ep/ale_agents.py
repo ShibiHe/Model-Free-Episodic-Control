@@ -639,9 +639,9 @@ class EC_DQN(object):
     def _update_recording_file(self, q_return, table_return, replay_return, knn_return_list, knn_distance_list):
         out = "{},{},{},".format(q_return, table_return, replay_return)
         self.recording_file.write(out)
-        for i in range(self.qec_table.knn):
+        for i in range(len(knn_return_list)):
             self.recording_file.write(str(knn_return_list[i])+',')
-        for i in range(self.qec_table.knn):
+        for i in range(len(knn_distance_list)):
             self.recording_file.write(str(knn_distance_list[i])+',')
         self.recording_file.write('\n')
         self.recording_file.flush()
@@ -707,7 +707,11 @@ class EC_DQN(object):
             return_table_list.append(return_table)
             knn_distance_list_list.append(knn_distance_list)
             knn_return_list_list.append(knn_return_list)
-            evaluation[i] = np.maximum(return_table, return_value[i])
+            # evaluation[i] = np.maximum(return_table, return_value[i])
+            if len(knn_distance_list) == 0:
+                evaluation[i] = -1.0
+            else:
+                evaluation[i] = return_table
 
         loss, target = self.network.train(imgs, actions, rewards, terminals, evaluation=evaluation, get_target=True)
         for i in range(self.network.batch_size):
