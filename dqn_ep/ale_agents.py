@@ -636,14 +636,13 @@ class EC_DQN(object):
         self.recording_file.write('\n')
         self.recording_file.flush()
 
-    def _update_recording_file(self, q_return, table_return, replay_return, knn_return_list, knn_state_list):
+    def _update_recording_file(self, q_return, table_return, replay_return, knn_return_list, knn_distance_list):
         out = "{},{},{},".format(q_return, table_return, replay_return)
         self.recording_file.write(out)
         for i in range(self.qec_table.knn):
             self.recording_file.write(str(knn_return_list[i])+',')
-        knn_state_list = [''.join(str(x).split()) for x in knn_state_list]
         for i in range(self.qec_table.knn):
-            self.recording_file.write(knn_state_list[i]+',')
+            self.recording_file.write(str(knn_distance_list[i])+',')
         self.recording_file.write('\n')
         self.recording_file.flush()
 
@@ -700,20 +699,20 @@ class EC_DQN(object):
         imgs, actions, rewards, terminals, return_value = self.data_set.random_batch(self.network.batch_size, True)
         evaluation = np.zeros((self.network.batch_size, 1), np.float32)
         return_table_list = []
-        knn_state_list_list = []
+        knn_distance_list_list = []
         knn_return_list_list = []
         for i in range(self.network.batch_size):
             state = imgs[i][self.data_set.phi_length-1]
-            return_table, knn_state_list, knn_return_list = self.qec_table.estimate(state, actions[i], verbose=True)
+            return_table, knn_distance_list, knn_return_list = self.qec_table.estimate(state, actions[i], verbose=True)
             return_table_list.append(return_table)
-            knn_state_list_list.append(knn_state_list)
+            knn_distance_list_list.append(knn_distance_list)
             knn_return_list_list.append(knn_return_list)
             evaluation[i] = np.maximum(return_table, return_value[i])
 
         loss, target = self.network.train(imgs, actions, rewards, terminals, evaluation=evaluation, get_target=True)
         for i in range(self.network.batch_size):
             self._update_recording_file(target[i], return_table_list[i],
-                                        return_value[i], knn_return_list_list[i], knn_state_list_list[i])
+                                        return_value[i], knn_return_list_list[i], knn_distance_list_list[i])
         return loss
 
     def step(self, reward, observation):
