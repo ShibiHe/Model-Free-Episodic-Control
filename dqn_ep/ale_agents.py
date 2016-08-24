@@ -1300,7 +1300,6 @@ class NeuralNetworkEpisodicMemory2(object):
         self.step_counter = 0
         self.batch_counter = 0
         self.episode_reward = 0
-        self.training_times = 0
 
         # We report the mean loss for every epoch.
         self.loss_averages = []
@@ -1336,13 +1335,8 @@ class NeuralNetworkEpisodicMemory2(object):
         differently.
         """
         imgs, actions, rewards, terminals, return_value = self.data_set.random_batch(self.network.batch_size, True)
-        evaluation = np.zeros((self.network.batch_size, 1), np.float32)
-        for i in range(self.network.batch_size):
-            state = imgs[i][self.data_set.phi_length-1]
-            evaluation[i] = self.qec_table.estimate(state, actions[i])
-            evaluation[i] = np.maximum(evaluation[i], return_value[i])
-
-        return self.network.train(imgs, actions, rewards, terminals, evaluation)
+        loss = self.network.train(imgs, actions, rewards, terminals, evaluation=return_value)
+        return loss
 
     def step(self, reward, observation):
         """
@@ -1376,10 +1370,9 @@ class NeuralNetworkEpisodicMemory2(object):
                                              np.clip(reward, -1, 1))
 
                 if self.step_counter % self.update_frequency == 0:
-                    self.training_times += 1
-                    # loss = self._do_training()
-                    # self.batch_counter += 1
-                    # self.loss_averages.append(loss)
+                    loss = self._do_training()
+                    self.batch_counter += 1
+                    self.loss_averages.append(loss)
 
             else:  # Still gathering initial random data...
                 action = self._choose_action(self.data_set, self.epsilon,
@@ -1425,19 +1418,10 @@ class NeuralNetworkEpisodicMemory2(object):
             index = (self.data_set.top-1) % self.data_set.max_steps
             while True:
                 q_return = q_return * self.network.discount + self.data_set.rewards[index]
-                # if not np.isclose(q_return, last_q_return):
-                #     self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
-                #     last_q_return = q_return
-                self.qec_table.update(self.data_set.imgs[index], self.data_set.actions[index], q_return)
                 self.data_set.return_value[index] = q_return
                 index = (index-1) % self.data_set.max_steps
                 if self.data_set.terminal[index] or index == self.data_set.bottom:
                     break
-
-            for i in range(self.training_times):
-                loss = self._do_training()
-                self.batch_counter += 1
-                self.loss_averages.append(loss)
 
             rho = 0.98
             self.steps_sec_ema *= rho
