@@ -8,6 +8,7 @@ due to the KNN_runtime_test.py  we use BallTree
 from sklearn.neighbors import BallTree
 import image_preprocessing as ip
 import logging
+from collections import OrderedDict
 
 
 class Buffer(object):
@@ -147,7 +148,7 @@ class QECTable(object):
             return False
 
     """update Q_EC(s,a)"""
-    def update(self, s, a, r):  # s is 84*84*3;  a is 0 to num_actions; r is reward
+    def update(self, s, a, r):  # s is 84*84;  a is 0 to num_actions; r is reward
         if type(a) == np.ndarray:
             a = a[0]
         state = np.dot(self.matrix_projection, s.flatten())
@@ -219,6 +220,39 @@ def print_table(table):
             print '(', action_buffer.lru[i], action_buffer.q_return[i], ')',
         print
     print
+
+
+class LshHash(object):
+    def __init__(self, out_dimension, in_dimension, size, rng):
+        self.d = OrderedDict()
+        self.size = size
+        self.projection = rng.randn(out_dimension, in_dimension)
+
+    def get_hash(self, s, a):
+        code = np.dot(self.projection, s.flatten())
+        code = ''.join(['1' if x > 0 else '0' for x in code])
+        code += bin(a)[2:]
+        code = hash(code)
+        return code
+
+    def update(self, s, a, r):
+        if type(a) == np.ndarray:
+            a = a[0]
+        key = self.get_hash(s, a)
+        if key in self.d:
+            value = self.d[key]
+            self.d.pop(key)
+            self.d[key] = np.maximum(value, r)
+        else:
+            self.d[key] = r
+            if len(self.d) > self.size:
+                self.d.popitem(False)
+
+    def evaluate(self, s, a):
+        if type(a) == np.ndarray:
+            a = a[0]
+        key = self.get_hash(s, a)
+        return self.d.get(key, 0.0)
 
 if __name__ == '__main__':
     images = cPickle.load(open('game_images', mode='rb'))
