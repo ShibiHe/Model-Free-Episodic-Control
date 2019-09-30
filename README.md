@@ -10,6 +10,8 @@ This package provides DQN and Episodic Control. The DQN implementation is based 
 
 I have contacted the author C. Blundell of Model Free Episodic Control. He told me he was using approximate KNN to speed up episodic control, however, he did not tell me details. So I used [annoy](https://github.com/spotify/annoy) to do KNN, and I rebuild the search tree frequently.
 
+related repo:https://github.com/astier/model-free-episodic-control
+
 #Dependencies
 
 Game roms should be stored in directory *roms* which stays next to dqn_ep.
